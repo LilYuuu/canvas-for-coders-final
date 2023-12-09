@@ -7,4 +7,3 @@ Canvas for Coders Final Project, Fall 2023
 * Added two audio sources to test positional audio
 * Added point lights to spheres, using distance to camera to control light intensity
 * Used MapControls to allow panning
-# canvas-for-coders-final

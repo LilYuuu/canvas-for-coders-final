@@ -39,6 +39,25 @@ document.addEventListener(
 
     // update the picking ray with the camera and pointer position
     raycaster.setFromCamera(mouse, camera);
+
+    // calculate objects intersecting the picking ray
+    const intersects = raycaster.intersectObjects(sphereArray);
+
+    // console.log(intersects);
+
+    if (intersects.length > 0 && controls.isLocked == true) {
+      console.log(intersects[0].object);
+      let found = sphereArray.find((sphere) => {
+        return sphere === intersects[0].object;
+      });
+      // info.style.color = "black";
+      // TODO: change to corresponding info
+      // info.innerHTML = infoArray[0];
+      // info.style.display = "block";
+    } else {
+      // info.innerHTML = "";
+      // info.style.display = "none";
+    }
   },
   false
 );
@@ -56,9 +75,6 @@ camera.position.set(0, 600, -600);
 // const axesHelper = new THREE.AxesHelper(50);
 // axesHelper.position.y = 0.01; // above the ground slightly
 // scene.add(axesHelper);
-
-// initialize clock
-const clock = new THREE.Clock(); // requires delta time value in update()
 
 // ambient light
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
@@ -84,13 +100,6 @@ const pointLight2 = new THREE.PointLight(0xffffff, pointLightIntensity2, 300);
 pointLight2.position.set(1500, 100, 0);
 scene.add(pointLight2);
 
-// area light
-// const rectLight = new THREE.RectAreaLight(0x00ff00, 3, 50, 100);
-// rectLight.position.set(0, 50, 200);
-// scene.add(rectLight);
-// const rectLightHelper = new RectAreaLightHelper(rectLight);
-// scene.add(rectLightHelper);
-
 // hemisphere light
 const hemiLight = new THREE.HemisphereLight(0x000000, 0x00ffff, 1);
 hemiLight.position.set(0, 200, 0);
@@ -103,9 +112,17 @@ const controls = new PointerLockControls(camera, document.body);
 scene.add(controls.getObject());
 let blocker = document.getElementById("blocker");
 let instructions = document.getElementById("instructions");
+let info = document.getElementById("info");
 
 initHTMLlayer();
 initControlMove();
+
+// sphereArray
+let sphereArray = [];
+const infoArray = [
+  "<h3>A Mei (阿妹)</h3> <br> This song narrates a lost love story with tinges of nostalgia, and to bring out the authenticity of these sentiments, the song is therefore sung in the dialect of Wenzhou district. Many of us have been down the same road, we may have encountered someone at some point, should they be our first love or someone special with whom we’d made a commitment, but after a period of closeness, we drifted apart due to reality’s vagaries.",
+  '<h3>Bu Ci Ka (站起来)</h3> <br> Disappointment is inevitable in life, but we must straighten our backs. Without too much foreshadowing and rhetoric, "Bu Ci Ka (Wenzhou dialect, means stand up)" is a very passionate work, a self-encouraging battle song. The pronunciation of the lyrics uses the author Jin Chengzhi\'s native Wenzhou dialect again - in this "Devil\'s Language", "stand up" is pronounced "bu ci ka", which is a bit funny at first, but as the work progresses, its power will be gradually released in the music.',
+];
 
 /*
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,12 +172,17 @@ sphereMesh.position.set(0, 100, 0);
 sphereMesh.scale.setScalar(5);
 sphereMesh.add(sound);
 scene.add(sphereMesh);
+sphereArray.push(sphereMesh);
 
 const sphereMesh2 = new THREE.Mesh(sphereGeometry, sphereMaterial);
 sphereMesh2.position.set(1500, 100, 0);
 sphereMesh2.scale.setScalar(5);
 sphereMesh2.add(sound2);
 scene.add(sphereMesh2);
+sphereArray.push(sphereMesh2);
+
+// console.log(sphereArray);
+// console.log(infoArray);
 
 // ground
 const groundGeometry = new THREE.PlaneGeometry(10000, 10000);
@@ -221,9 +243,15 @@ const animate = () => {
   if (dist > 700) {
     pointLightIntensity = 0.5;
     // console.log("off");
+    info.innerHTML = "";
+    info.style.display = "none";
   } else {
     pointLightIntensity = 3;
+    // TODO: change to corresponding info
+    info.innerHTML = infoArray[0];
+    info.style.display = "block";
     // console.log("on");
+    // console.log("info: ", info);
   }
   pointLight.intensity = pointLightIntensity;
 
@@ -231,9 +259,15 @@ const animate = () => {
   if (dist2 > 700) {
     pointLightIntensity2 = 0.5;
     // console.log("off");
+    info2.innerHTML = "";
+    info2.style.display = "none";
   } else {
     pointLightIntensity2 = 3;
     // console.log("on");
+    info2.innerHTML = infoArray[1];
+    info2.style.display = "block";
+    // console.log("on");
+    // console.log("info2: ", info2);
   }
   pointLight2.intensity = pointLightIntensity2;
 
@@ -299,7 +333,6 @@ function initControlMove() {
 function initHTMLlayer() {
   instructions.addEventListener("click", function () {
     controls.lock();
-    console.log("instructions clicked");
   });
 
   controls.addEventListener("lock", function () {

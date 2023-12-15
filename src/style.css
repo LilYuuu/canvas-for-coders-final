@@ -7,6 +7,7 @@ body {
   overflow: hidden;
   /* font-family: Monospace; */
 	/* font-size: 20px; */
+  font-family: 'DM Sans', sans-serif;
 	line-height: 24px;
   /* position: relative; */
 }
@@ -47,7 +48,7 @@ canvas {
 	padding: 8vh;
   margin: 0 auto;
 	line-height: 4vh;
-  border: 2px solid rgba(0, 0, 0, 0.3);
+  /* border: 2px solid rgba(0, 0, 0, 0.3); */
   border-radius: 24px;
   background-color: rgba(0, 0, 0, 0.3);
   color: white;

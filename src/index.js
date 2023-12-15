@@ -1,7 +1,6 @@
 import "./style.css";
 import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls";
-import { MapControls } from "three/addons/controls/MapControls";
+import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 import { RectAreaLightHelper } from "three/addons/helpers/RectAreaLightHelper";
 
 // app
@@ -13,25 +12,38 @@ renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 app.appendChild(renderer.domElement);
 
+// move
+let moveForward = false;
+let moveBackward = false;
+let moveLeft = false;
+let moveRight = false;
+
+let prevTime = performance.now();
+let velocity = new THREE.Vector3();
+let direction = new THREE.Vector3();
+
 // scene
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000);
-scene.fog = new THREE.FogExp2(0xcccccc, 0.0005);
+scene.background = new THREE.Color(0xe9f1ff);
+scene.fog = new THREE.FogExp2(0xe9f1ff, 0.000358);
 
-// orthographic camera
-// const camera = new THREE.OrthographicCamera(
-//   window.innerWidth / -2,
-//   window.innerWidth / 2,
-//   window.innerHeight / 2,
-//   window.innerHeight / -2,
-//   0,
-//   5000
-// );
+// raycast
+let mouse = new THREE.Vector2(0, 0);
+const raycaster = new THREE.Raycaster();
+document.addEventListener(
+  "mousemove",
+  (ev) => {
+    // three.js expects 'normalized device coordinates' (i.e. between -1 and 1 on both axes)
+    mouse.x = (ev.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(ev.clientY / window.innerHeight) * 2 + 1;
 
-// camera.position.set(100, 400, 250);
-// camera.position.set(200, 200, 100);
-// camera.lookAt(0, 0, 0);
+    // update the picking ray with the camera and pointer position
+    raycaster.setFromCamera(mouse, camera);
+  },
+  false
+);
 
+// camera
 const camera = new THREE.PerspectiveCamera(
   60,
   window.innerWidth / window.innerHeight,
@@ -87,24 +99,13 @@ scene.add(hemiLight);
 // scene.add(hemiLightHelper);
 
 // control
-// const controls = new OrbitControls(camera, renderer.domElement); // orbit control
-const controls = new MapControls(camera, renderer.domElement); // map control
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-// controls.screenSpacePanning = false;
-// controls.enableRotate = true;
-// controls.rotateSpeed = 0.3;
-// controls.enableZoom = true;
-// controls.zoomSpeed = 0.5;
-// controls.minDistance = 10;
-// controls.maxDistance = 1000;
+const controls = new PointerLockControls(camera, document.body);
+scene.add(controls.getObject());
+let blocker = document.getElementById("blocker");
+let instructions = document.getElementById("instructions");
 
-// first person control
-// const controls = new FirstPersonControls(camera, renderer.domElement);/
-// controls.movementSpeed = 100;
-// controls.lookSpeed = 0.02;
-
-// const clock = new THREE.Clock(); // requires delta time value in update()
+initHTMLlayer();
+initControlMove();
 
 /*
 ////////////////////////////////////////////////////////////////////////////////
@@ -192,8 +193,28 @@ window.addEventListener("resize", onResize);
 const animate = () => {
   requestAnimationFrame(animate);
 
-  controls.update();
-  // controls.update(clock.getDelta());
+  const time = performance.now();
+
+  if (controls.isLocked === true) {
+    console.log("contorls locked");
+    const delta = (time - prevTime) / 100;
+
+    velocity.x -= velocity.x * 10.0 * delta;
+    velocity.z -= velocity.z * 10.0 * delta;
+    // velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
+
+    direction.z = Number(moveForward) - Number(moveBackward);
+    direction.x = Number(moveRight) - Number(moveLeft);
+    direction.normalize();
+    // this ensures consistent movements in all directions
+
+    if (moveForward || moveBackward) velocity.z -= direction.z * 1000.0 * delta;
+    if (moveLeft || moveRight) velocity.x -= direction.x * 1000.0 * delta;
+
+    controls.moveRight(-velocity.x * delta);
+    controls.moveForward(-velocity.z * delta);
+    controls.getObject().position.y += velocity.y * delta;
+  }
 
   let dist = camera.position.distanceTo(sphereMesh.position);
   // console.log(dist);
@@ -216,7 +237,86 @@ const animate = () => {
   }
   pointLight2.intensity = pointLightIntensity2;
 
+  prevTime = time;
+
   renderer.render(scene, camera);
 };
 
 animate();
+
+function initControlMove() {
+  const onKeyDown = function (event) {
+    switch (event.code) {
+      case "ArrowUp":
+      case "KeyW":
+        moveForward = true;
+        break;
+
+      case "ArrowLeft":
+      case "KeyA":
+        moveLeft = true;
+        break;
+
+      case "ArrowDown":
+      case "KeyS":
+        moveBackward = true;
+        break;
+
+      case "ArrowRight":
+      case "KeyD":
+        moveRight = true;
+        break;
+    }
+  };
+  const onKeyUp = function (event) {
+    switch (event.code) {
+      case "ArrowUp":
+      case "KeyW":
+        moveForward = false;
+        break;
+
+      case "ArrowLeft":
+      case "KeyA":
+        moveLeft = false;
+        break;
+
+      case "ArrowDown":
+      case "KeyS":
+        moveBackward = false;
+        break;
+
+      case "ArrowRight":
+      case "KeyD":
+        moveRight = false;
+        break;
+    }
+  };
+
+  document.addEventListener("keydown", onKeyDown);
+  document.addEventListener("keyup", onKeyUp);
+}
+
+function initHTMLlayer() {
+  instructions.addEventListener("click", function () {
+    controls.lock();
+    console.log("instructions clicked");
+  });
+
+  controls.addEventListener("lock", function () {
+    console.log("view control lock to mouse");
+    instructions.style.display = "none";
+    blocker.style.display = "none";
+    // guider.style.display="block";
+    // info.style.display='block';
+    controls.pointerSpeed = 0.8;
+  });
+
+  controls.addEventListener("unlock", function () {
+    console.log("view control unlock");
+    instructions.style.display = "";
+    blocker.style.display = "block";
+    // guider.style.display="none";
+    // info.style.display='none';
+    controls.pointerSpeed = 0;
+  });
+}

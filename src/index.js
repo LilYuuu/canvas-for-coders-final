@@ -139,7 +139,7 @@ const sound2 = new THREE.PositionalAudio(listener);
 
 // load a sound and set it as the PositionalAudio object's buffer
 const audioLoader = new THREE.AudioLoader();
-audioLoader.load("/AMei.mp3", function (buffer) {
+audioLoader.load("/public/AMei.mp3", function (buffer) {
   sound.setBuffer(buffer);
   sound.setVolume(1);
   sound.setRefDistance(500); // the distance at which the volume reduction starts taking effect
@@ -147,7 +147,7 @@ audioLoader.load("/AMei.mp3", function (buffer) {
   sound.setLoop(true);
   // console.log(sound);
 });
-audioLoader.load("/BuCiKa.mp3", function (buffer) {
+audioLoader.load("/public/BuCiKa.mp3", function (buffer) {
   sound2.setBuffer(buffer);
   sound2.setVolume(0.2);
   sound2.setRefDistance(500);

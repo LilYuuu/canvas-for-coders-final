@@ -9,6 +9,6 @@ export default defineConfig({
   publicDir: resolve(__dirname, "public"),
   base: "/canvas-for-coders-final/",
   build: {
-    outDir: "/docs",
+    outDir: "../docs",
   },
 });
